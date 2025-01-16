@@ -6,6 +6,7 @@
     <title>All Products</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        
         * {
             margin: 0;
             padding: 0;
@@ -225,9 +226,15 @@
             }
         }
     </style>
+    </style>
 </head>
 <body>
-    <?php include 'sidebar.php'; ?>
+    <?php 
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+    include 'sidebar.php'; 
+    ?>
     <div class="container">
         <div class="header">
             <div class="header-content">
@@ -235,7 +242,7 @@
                     <i class="fas fa-search"></i>
                     <input type="text" id="searchInput" placeholder="Search products...">
                 </div>
-                <a href="add_product.php" class="add-product-btn">
+                <a href="productInsertForm.php" class="add-product-btn">
                     <i class="fas fa-plus"></i> Add New Product
                 </a>
             </div>
@@ -244,10 +251,14 @@
                     <option value="">All Categories</option>
                     <?php
                     include 'connection.php';
-                    $categories = $conn->query("SELECT DISTINCT p_category FROM products ORDER BY p_category");
-                    while($category = $categories->fetch_assoc()) {
-                        echo "<option value='" . htmlspecialchars($category['p_category']) . "'>" . 
-                             htmlspecialchars($category['p_category']) . "</option>";
+                    $categories = $conn->query("SELECT DISTINCT p_category FROM product_detail ORDER BY p_category");
+                    if ($categories) {
+                        while($category = $categories->fetch_assoc()) {
+                            echo "<option value='" . htmlspecialchars($category['p_category']) . "'>" . 
+                                 htmlspecialchars($category['p_category']) . "</option>";
+                        }
+                    } else {
+                        echo "<option value=''>No categories available</option>";
                     }
                     ?>
                 </select>
@@ -255,9 +266,13 @@
                     <option value="">All Brands</option>
                     <?php
                     $brands = $conn->query("SELECT DISTINCT p_brand FROM product_detail ORDER BY p_brand");
-                    while($brand = $brands->fetch_assoc()) {
-                        echo "<option value='" . htmlspecialchars($brand['p_brand']) . "'>" . 
-                             htmlspecialchars($brand['p_brand']) . "</option>";
+                    if ($brands) {
+                        while($brand = $brands->fetch_assoc()) {
+                            echo "<option value='" . htmlspecialchars($brand['p_brand']) . "'>" . 
+                                 htmlspecialchars($brand['p_brand']) . "</option>";
+                        }
+                    } else {
+                        echo "<option value=''>No brands available</option>";
                     }
                     ?>
                 </select>
@@ -272,76 +287,64 @@
 
         <div class="products-grid">
         <?php
-include 'connection.php';
+        $query = "SELECT * FROM product_detail ORDER BY p_name ASC";
+        $result = $conn->query($query);
 
-$query = "SELECT * FROM product_detail ORDER BY p_name ASC";
-$result = $conn->query($query);
-
-if (!$result) {
-    die("Query Failed: " . $conn->error);
-}
-
-while ($product = $result->fetch_assoc()) {
-?>
-    <div class="product-card" data-category="<?php echo htmlspecialchars($product['p_category']); ?>" 
-         data-brand="<?php echo htmlspecialchars($product['p_brand']); ?>">
-        <div class="product-image">
-            <img src="<?php echo htmlspecialchars($product['images']); ?>" 
-                 alt="<?php echo htmlspecialchars($product['p_name']); ?>">
-        </div>
-        <div class="product-info">
-            <div class="product-category">
-                <?php echo htmlspecialchars($product['p_category']); ?>
-            </div>
-            <h3 class="product-name">
-                <?php echo htmlspecialchars($product['p_name']); ?>
-            </h3>
-            <div class="product-price">
-                $<?php echo number_format($product['price'], 2); ?>
-            </div>
-            <div class="product-meta">
-                <div class="product-brand">
-                    <i class="fas fa-trademark"></i>
-                    <?php echo htmlspecialchars($product['p_brand']); ?>
+        if ($result && $result->num_rows > 0) {
+            while ($product = $result->fetch_assoc()) {
+                ?>
+                <div class="product-card" data-category="<?php echo htmlspecialchars($product['p_category']); ?>" 
+                     data-brand="<?php echo htmlspecialchars($product['p_brand']); ?>">
+                    <div class="product-image">
+                        <img src="<?php echo htmlspecialchars($product['images']); ?>" 
+                             alt="<?php echo htmlspecialchars($product['p_name']); ?>">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-category">
+                            <?php echo htmlspecialchars($product['p_category']); ?>
+                        </div>
+                        <h3 class="product-name">
+                            <?php echo htmlspecialchars($product['p_name']); ?>
+                        </h3>
+                        <div class="product-price">
+                            $<?php echo number_format($product['price'], 2); ?>
+                        </div>
+                        <div class="product-meta">
+                            <div class="product-brand">
+                                <i class="fas fa-trademark"></i>
+                                <?php echo htmlspecialchars($product['p_brand']); ?>
+                            </div>
+                            <div class="product-actions">
+                                <a href="product_details.php?id=<?php echo urlencode($product['product_id']); ?>" 
+                                   class="action-btn view-btn" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="edit_product.php?id=<?php echo urlencode($product['product_id']); ?>" 
+                                   class="action-btn edit-btn" title="Edit Product">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="deleteProduct('<?php echo $product['product_id']; ?>')" 
+                                        class="action-btn delete-btn" title="Delete Product">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="product-actions">
-                    <a href="product_details.php?id=<?php echo urlencode($product['product_id']); ?>" 
-                       class="action-btn view-btn" title="View Details">
-                        <i class="fas fa-eye"></i>
-                    </a>
-                    <a href="edit_product.php?id=<?php echo urlencode($product['product_id']); ?>" 
-                       class="action-btn edit-btn" title="Edit Product">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    <button onclick="deleteProduct('<?php echo $product['product_id']; ?>')" 
-                            class="action-btn delete-btn" title="Delete Product">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-<?php
+                <?php
             }
-            $conn->close();
-            ?>
+        } else {
+            echo "<p>No products available</p>";
+        }
+        $conn->close();
+        ?>
         </div>
     </div>
 
     <script>
-        // Search functionality
-        document.getElementById('searchInput').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            filterProducts();
-        });
-
-        // Category filter
+        document.getElementById('searchInput').addEventListener('input', filterProducts);
         document.getElementById('categoryFilter').addEventListener('change', filterProducts);
-        
-        // Brand filter
         document.getElementById('brandFilter').addEventListener('change', filterProducts);
-        
-        // Sort filter
         document.getElementById('sortFilter').addEventListener('change', filterProducts);
 
         function filterProducts() {
@@ -365,7 +368,6 @@ while ($product = $result->fetch_assoc()) {
                     matchesSearch && matchesCategory && matchesBrand ? 'block' : 'none';
             });
 
-            // Sorting
             const productsArray = Array.from(products);
             productsArray.sort((a, b) => {
                 const nameA = a.querySelector('.product-name').textContent;
@@ -397,7 +399,6 @@ while ($product = $result->fetch_assoc()) {
             }
         }
 
-        // Add fade-in animation on page load
         document.addEventListener('DOMContentLoaded', function() {
             const products = document.querySelectorAll('.product-card');
             products.forEach((product, index) => {

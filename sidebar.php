@@ -124,7 +124,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="productDisplay.php">
+                                    <a class="dropdown-item" href="allproductDisplay.php">
                                         <i class="fas fa-list"></i>
                                         View All Products
                                     </a>
